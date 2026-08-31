@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zustand"
+  short_description: "React Zustand setup for Vite and Next.js."
+  default_prompt: "Use $zustand to add or maintain Zustand store modules in a React SPA Vite or Next.js project."
