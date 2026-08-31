@@ -1,0 +1,41 @@
+{
+  "skill_name": "backend-feature-fastapi",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "在這個 backend 裡新增 projects API。Project 需要 id、name、description、is_active、created_at，支援 list 和 create，請照既有架構拆 router/schema/service/repository/model/dependencies，並處理 Alembic migration。",
+      "expected_output": "A backend implementation or implementation plan that follows the feature-based FastAPI architecture, registers the router in app/features/router.py, creates schemas/service/repository/model/dependencies, and accounts for Alembic migration updates.",
+      "files": [],
+      "assertions": [
+        "Output includes a projects feature split into __init__.py, router.py, schemas.py, service.py, repository.py, models.py, and dependencies.py.",
+        "Output registers the projects router in app/features/router.py instead of importing it directly in app/main.py.",
+        "Output keeps database access in the repository layer and uses dependency-injected service methods in the router.",
+        "Output includes SQLAlchemy async model guidance and Alembic migration handling, including migrations/env.py model import or equivalent metadata visibility."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "幫我加一個 /api/v1/version endpoint 回傳 service name、environment、version，不需要資料庫。請沿用目前後端專案風格。",
+      "expected_output": "A non-database feature following the minimal health-style pattern, without unnecessary repository/model/dependencies files, and registered through app/features/router.py.",
+      "files": [],
+      "assertions": [
+        "Output follows the minimal non-database feature pattern with router.py, schemas.py, service.py, and __init__.py.",
+        "Output does not create repository.py, models.py, dependencies.py, or Alembic migrations for the version endpoint.",
+        "Output registers the version router in app/features/router.py and exposes the endpoint under /api/v1/version.",
+        "Output derives service name and environment from settings and accounts for where version should be configured."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "users feature 要新增 GET /users/{user_id}，找不到要回 404。請照目前架構修改，不要把資料庫查詢寫在 router。",
+      "expected_output": "Changes that add repository get-by-id access, service-level not-found handling with HTTPException 404, and a router endpoint using dependency-injected UserService.",
+      "files": [],
+      "assertions": [
+        "Output adds get-by-id data access in app/features/users/repository.py using async SQLAlchemy.",
+        "Output raises HTTPException 404 from the service layer when a user is not found.",
+        "Output adds GET /users/{user_id} in the router with response_model=UserRead and injected UserService.",
+        "Output avoids direct database queries in the router."
+      ]
+    }
+  ]
+}
