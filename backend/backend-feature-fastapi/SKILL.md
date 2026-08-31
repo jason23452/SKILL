@@ -14,11 +14,11 @@ compatibility: Python 3.12 FastAPI backend using uv, SQLAlchemy 2 async, asyncpg
   "role": "backend",
   "order": 10,
   "packageManager": "uv",
-  "scaffoldCommand": [
-    "node -e \"const fs=require('fs'),p=require('path');const w=(f,s)=>{fs.mkdirSync(p.dirname(f),{recursive:true});fs.writeFileSync(f,s)};w('app/__init__.py','');w('app/features/__init__.py','');w('app/features/router.py','from fastapi import APIRouter\\n\\nrouter = APIRouter()\\n\\n@router.get(\\\"/\\\")\\ndef root():\\n    return {\\\"status\\\": \\\"ok\\\"}\\n\\n@router.get(\\\"/health\\\")\\ndef health():\\n    return {\\\"status\\\": \\\"ok\\\"}\\n');w('app/main.py','from fastapi import FastAPI\\nfrom app.features.router import router as feature_router\\n\\napp = FastAPI()\\napp.include_router(feature_router)\\n');fs.writeFileSync('pyproject.toml','[project]\\nname = \\\"greenfield-backend\\\"\\nversion = \\\"0.1.0\\\"\\nrequires-python = \\\">=3.12\\\"\\ndependencies = [\\n  \\\"fastapi[standard]>=0.115.0\\\"\\n]\\n');\" && uv sync"
-  ],
+   "scaffoldCommand": [
+     "if test -f .opencode/skills/backend-feature-fastapi/scripts/bootstrap-fastapi.cjs; then node .opencode/skills/backend-feature-fastapi/scripts/bootstrap-fastapi.cjs; else node ${OPENCODE_PROJECT_SKILLS_PRESEEDED_DIR:-/app/.opencode/skills}/backend-feature-fastapi/scripts/bootstrap-fastapi.cjs; fi"
+   ],
   "verificationCommands": ["uv run python -m compileall app"],
-  "runtimeSmokeCommand": "uv run fastapi dev app/main.py --host 127.0.0.1 --port $PORT",
+   "runtimeSmokeCommand": "uv run uvicorn app.main:app --host 127.0.0.1 --port $PORT",
   "runtimeSmokeHealthUrl": "http://127.0.0.1:$PORT/health"
 }
 ```
@@ -43,6 +43,13 @@ Read `references/architecture.md` when you need a compact project map. Read `ref
 - Each feature owns its HTTP layer, schemas, service layer, repository layer, model, and dependency wiring.
 - Use absolute imports from `app...`.
 - Keep route prefixes versioned through `settings.api_prefix`; feature routers should use feature-local prefixes like `/users`, not `/api/v1/users`.
+
+## CORS And Runtime
+
+- Configure `CORSMiddleware` in `app/main.py` with `allow_origins=["*"]`, `allow_methods=["*"]`, and `allow_headers=["*"]` by default.
+- Keep `allow_credentials=False` when using wildcard origins; browsers reject wildcard origins for credentialed CORS requests.
+- Start the application with `uv run uvicorn app.main:app --host 127.0.0.1 --port $PORT`.
+- Keep `uvicorn[standard]` in `pyproject.toml` so the documented runtime command is available after `uv sync`.
 
 ## Feature Layout
 

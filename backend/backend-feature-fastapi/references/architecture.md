@@ -16,6 +16,7 @@ This project uses a feature-based FastAPI backend located at `backend/`.
 
 - `backend/main.py`: CLI entrypoint for `uv run dev`; runs `uvicorn` against `app.main:app`.
 - `backend/app/main.py`: contains `AppFactory`, creates `FastAPI`, sets title/debug/lifespan, and includes `api_router` with `settings.api_prefix`.
+- `backend/app/main.py`: configures permissive development CORS with `allow_origins=["*"]`, all methods and headers, and `allow_credentials=False`.
 - `backend/app/features/router.py`: imports feature packages and includes each feature router.
 
 ## Shared Infrastructure
@@ -70,7 +71,6 @@ Run from `backend/`:
 
 ```bash
 uv sync
-uv run dev
 uv run uvicorn app.main:app --reload
 uv run alembic upgrade head
 uv run python -m compileall app
