@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "docker-development": {
+      "source": "alirezarezvani/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/docker-development/skills/docker-development/SKILL.md",
+      "computedHash": "1348ef1038327f51eb47b370a3da2a5e574f9a1097616f3d1bfa66570ad9a7e4"
+    },
     "docker-patterns": {
       "source": "affaan-m/ecc",
       "sourceType": "github",
