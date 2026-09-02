@@ -45,6 +45,19 @@ Use this skill to:
 - apply coss/Base UI migration rules from shadcn/Radix assumptions
 - reference particle examples to produce practical, production-like patterns
 
+## Global Component File Placement
+
+When a task requires creating or updating local coss component files, first inspect the frontend source root, `components.json`, import aliases, and nearby components. Follow the existing project convention or an explicit user-provided path instead of assuming `components/ui/`.
+
+Treat these as valid locations for globally reusable frontend components, resolving them under the project's source root when applicable:
+
+- `app/components/` or `src/app/components/` for app-wide composition, providers, global modal/toast hosts, and application chrome.
+- `shared/components/` or `src/shared/components/` for components reused across features.
+- `shared/components/ui/` or `src/shared/components/ui/` for reusable coss primitives and project-level UI wrappers.
+- `shared/components/layout/` or `src/shared/components/layout/` for reusable app shell and layout components.
+
+Do not place a globally reusable component inside a feature or route directory unless it is intentionally feature-specific. Use `components/ui/` only when the existing project or `components.json` already uses that shadcn-style location. Keep generated imports aligned with the selected directory and the project's configured alias.
+
 ## Source of truth
 
 - coss components docs: `apps/ui/content/docs/components/*.mdx`
