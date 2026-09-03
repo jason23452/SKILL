@@ -34,7 +34,7 @@ npm install @base-ui/react
 Add providers in app layout:
 
 ```tsx
-import { AnchoredToastProvider, ToastProvider } from "@/components/ui/toast"
+import { AnchoredToastProvider, ToastProvider } from "{{ui}}/toast"
 ```
 
 Wrap app content with both:
@@ -57,7 +57,7 @@ import {
   ToastProvider,
   anchoredToastManager,
   toastManager,
-} from "@/components/ui/toast"
+} from "{{ui}}/toast"
 ```
 
 ## Minimal pattern
@@ -89,7 +89,7 @@ toastManager.add({
 ## Stacked usage
 
 ```tsx
-import { toastManager } from "@/components/ui/toast"
+import { toastManager } from "{{ui}}/toast"
 
 toastManager.add({
   title: "Event has been created",
@@ -100,7 +100,7 @@ toastManager.add({
 ## Anchored usage
 
 ```tsx
-import { anchoredToastManager } from "@/components/ui/toast"
+import { anchoredToastManager } from "{{ui}}/toast"
 
 anchoredToastManager.add({
   title: "Copied!",
@@ -126,4 +126,3 @@ anchoredToastManager.add({
 - anchored tooltip-style confirmation: `p-toast-7`
 - anchored error toast with manual lifecycle handling: `p-toast-8`
 - anchored toast pattern in a non-toast primitive: `p-toggle-8`
-

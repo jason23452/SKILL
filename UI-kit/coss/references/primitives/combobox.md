@@ -40,7 +40,7 @@ import {
   ComboboxSeparator,
   ComboboxValue,
   useComboboxFilter,
-} from "@/components/ui/combobox"
+} from "{{ui}}/combobox"
 ```
 
 ## Minimal pattern

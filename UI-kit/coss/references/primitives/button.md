@@ -20,7 +20,7 @@ npm install @base-ui/react
 ## Canonical imports
 
 ```tsx
-import { Button } from "@/components/ui/button"
+import { Button } from "{{ui}}/button"
 ```
 
 ## Minimal pattern

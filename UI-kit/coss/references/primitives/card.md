@@ -27,7 +27,7 @@ import {
   CardHeader,
   CardPanel,
   CardTitle,
-} from "@/components/ui/card"
+} from "{{ui}}/card"
 ```
 
 ## Minimal pattern

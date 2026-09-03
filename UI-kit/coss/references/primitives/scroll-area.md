@@ -20,7 +20,7 @@ npm install @base-ui/react
 ## Canonical imports
 
 ```tsx
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea } from "{{ui}}/scroll-area"
 ```
 
 ## Minimal pattern

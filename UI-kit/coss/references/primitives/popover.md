@@ -34,7 +34,7 @@ import {
   PopoverPopup,
   PopoverTitle,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "{{ui}}/popover"
 ```
 
 ## Minimal pattern

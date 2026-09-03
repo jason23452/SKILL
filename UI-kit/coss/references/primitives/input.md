@@ -20,7 +20,7 @@ npm install @base-ui/react
 ## Canonical imports
 
 ```tsx
-import { Input } from "@/components/ui/input"
+import { Input } from "{{ui}}/input"
 ```
 
 ## Minimal pattern

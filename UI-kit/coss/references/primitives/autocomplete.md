@@ -39,7 +39,7 @@ import {
   AutocompleteSeparator,
   AutocompleteStatus,
   useAutocompleteFilter,
-} from "@/components/ui/autocomplete"
+} from "{{ui}}/autocomplete"
 ```
 
 ## Minimal pattern

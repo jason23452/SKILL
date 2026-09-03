@@ -38,7 +38,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "{{ui}}/sidebar"
 ```
 
 ## Minimal pattern

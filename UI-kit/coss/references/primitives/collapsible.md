@@ -24,7 +24,7 @@ import {
   Collapsible,
   CollapsiblePanel,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "{{ui}}/collapsible"
 ```
 
 ## Minimal pattern

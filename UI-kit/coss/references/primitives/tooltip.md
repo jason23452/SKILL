@@ -32,7 +32,7 @@ import {
   TooltipPopup,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "{{ui}}/tooltip"
 ```
 
 ## Minimal pattern

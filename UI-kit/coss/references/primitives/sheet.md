@@ -36,7 +36,7 @@ import {
   SheetPopup,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
+} from "{{ui}}/sheet"
 ```
 
 ## Minimal pattern

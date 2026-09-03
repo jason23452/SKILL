@@ -11,14 +11,14 @@ Use this guide when installing, previewing, or discovering coss components via t
 - Do not invent flags. Use only documented CLI flags.
 - Never run `shadcn init @coss/style` in a non-interactive bootstrap. It can prompt for project choices. Use the bundled `coss-ui-bootstrap.cjs` script instead; it seeds `components.json` and uses `add --yes --overwrite`.
 - Let the shadcn CLI finish normally. The official coss docs state that the CLI creates files and installs dependencies; do not kill it as soon as component files appear, because dependency installation may still be running.
-- In React/Vite projects, coss owns the Tailwind prerequisite: install `tailwindcss` and `@tailwindcss/vite`, add the Vite plugin, and ensure the CSS entry imports `tailwindcss`.
+- In React projects, coss owns the Tailwind prerequisite and ensures the CSS entry imports `tailwindcss`. Install and configure `@tailwindcss/vite` plus `vite-tsconfig-paths` only when a Vite config exists; preserve another framework's existing Tailwind and alias integration.
 - Verify runtime dependencies before declaring success. coss components commonly need `@base-ui/react`, `lucide-react`, `class-variance-authority`, `clsx`, and `tailwind-merge`.
 
 ## Core Commands for coss Usage
 
 ### Automated bootstrap path
 
-For Greenfield and other unattended runs, invoke the bundled bootstrap script from the target frontend root. It configures Tailwind, aliases, and the coss registry before it calls only non-interactive `add` commands. When `src/shared/` exists, generated primitives are placed in `src/shared/components/ui/`.
+For unattended runs in an existing React frontend, invoke the bundled bootstrap script from the target frontend root. It configures Tailwind, aliases, and the coss registry before it calls only non-interactive `add` commands. It preserves an existing `components.json` UI alias; otherwise it detects path aliases and established reusable-component directories before choosing a fallback. Import aliases such as `@` and `~` must not become project-root directories. This skill does not require a separate layout/scaffold skill.
 
 ```bash
 COSS_COMPONENTS="button dialog toast" node .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs

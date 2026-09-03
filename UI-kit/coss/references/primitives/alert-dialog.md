@@ -35,7 +35,7 @@ import {
   AlertDialogPopup,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "{{ui}}/alert-dialog"
 ```
 
 ## Minimal pattern

@@ -47,7 +47,7 @@ import {
   DrawerMenuTrigger,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "{{ui}}/drawer"
 ```
 
 ## Minimal pattern

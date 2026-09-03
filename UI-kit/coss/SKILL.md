@@ -1,6 +1,6 @@
 ---
 name: coss
-description: React UI kit skill for coss UI components. Use with React/Vite frontends when building UIs with coss primitives (buttons, dialogs, selects, forms, menus, tabs, inputs, toasts, etc.), migrating from shadcn/Radix to coss/Base UI, composing trigger-based overlays, or troubleshooting coss component behavior. Requires Tailwind CSS v4 and @base-ui/react. Covers imports, accessibility, Tailwind styling, and common pitfalls.
+description: React UI kit skill for coss UI components. Use with React frontends when building UIs with coss primitives (buttons, dialogs, selects, forms, menus, tabs, inputs, toasts, etc.), installing components into an existing shared UI directory, migrating from shadcn/Radix to coss/Base UI, composing trigger-based overlays, or troubleshooting coss behavior. Works independently of any project-layout skill, resolves project aliases and reusable-component locations, and covers Tailwind CSS v4, accessibility, styling, and common pitfalls.
 license: MIT
 metadata:
   author: cosscom
@@ -10,9 +10,9 @@ metadata:
 
 ## OpenCode Greenfield Bootstrap Metadata
 
-This OpenCode-only metadata installs coss UI registry artifacts during Greenfield bootstrap. The coss agent skills come from the global/preseeded skills manager during bootstrap. The rest of this file remains the official coss skill guidance and references.
+This OpenCode-only metadata installs coss UI registry artifacts in an existing React frontend. It has no dependency on a separate framework or project-layout skill. The rest of this file remains the official coss skill guidance and references.
 
-Bootstrap is deliberately non-interactive: never run `shadcn init @coss/style` from Greenfield automation. The bundled script prepares Tailwind, aliases, and a CLI-valid `components.json`, then uses only official `shadcn add ... --yes --overwrite` registry commands. In the feature-based React/Vite scaffold this writes reusable primitives to `src/shared/components/ui/`. It succeeds only when the official registry, generated primitive files, their local imports, and runtime dependencies are all present. The generated `coss-ui.json` records the installed component set so `--verify` can rerun that check without changing the project.
+Bootstrap is deliberately non-interactive: never run `shadcn init @coss/style` from Greenfield automation. The bundled script prepares Tailwind, aliases, and a CLI-valid `components.json`, then uses only official `shadcn add ... --yes --overwrite` registry commands. Before it installs components, it preserves an existing `components.json` UI location or detects the frontend's shared-component directory. `@` remains an import alias, never a standalone filesystem directory. It succeeds only when the official registry, generated primitive files, their local imports, and runtime dependencies are all present. The generated `coss-ui.json` records the installed component set so `--verify` can rerun that check without changing the project.
 
 Registry specs such as `@coss/ui`, `@coss/colors-neutral`, `@coss/style`, `coss/ui`, and `coss/colors-neutral` are remote shadcn registry identifiers. Use the shadcn CLI and diagnose the actual CLI process, `package.json`, lockfile, and generated UI files.
 
@@ -21,9 +21,8 @@ Registry specs such as `@coss/ui`, `@coss/colors-neutral`, `@coss/style`, `coss/
   "role": "frontend",
   "category": "ui-kit",
   "uiKit": "coss",
-  "frameworks": ["react", "react-vite"],
-  "requiresPrimarySkills": ["react-vite-feature-based"],
-  "order": 30,
+  "frameworks": ["react", "react-spa", "react-vite", "next", "nextjs", "remix"],
+  "order": 0,
   "packageManager": "node",
   "scaffoldCommand": [
     "if test -f .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs; then node .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs; else node ${OPENCODE_PROJECT_SKILLS_PRESEEDED_DIR:-/app/.opencode/skills}/coss/scripts/coss-ui-bootstrap.cjs; fi"
@@ -36,7 +35,7 @@ Registry specs such as `@coss/ui`, `@coss/colors-neutral`, `@coss/style`, `coss/
 
 coss ui is a component library built on Base UI with a shadcn-like developer experience plus a large particle catalog.
 
-The coss skill owns its direct React/Vite UI dependencies: Tailwind CSS v4, `@tailwindcss/vite`, `@base-ui/react`, `lucide-react`, `class-variance-authority`, `clsx`, and `tailwind-merge`.
+The coss skill owns its direct React UI dependencies: Tailwind CSS v4, `@base-ui/react`, `lucide-react`, `class-variance-authority`, `clsx`, and `tailwind-merge`. When the target project has a Vite config, it also installs `@tailwindcss/vite` and `vite-tsconfig-paths` so both Tailwind and detected TypeScript aliases resolve at runtime.
 
 ## What this skill is for
 
@@ -49,7 +48,7 @@ Use this skill to:
 
 ## Global Component File Placement
 
-When a task requires creating or updating local coss component files, first inspect the frontend source root, `components.json`, import aliases, and nearby components. Follow the existing project convention or an explicit user-provided path instead of assuming `components/ui/`.
+When a task requires creating or updating local coss component files, resolve the destination in this order: an explicit user path, `components.json` aliases, TypeScript/JavaScript path aliases, existing reusable UI/component directories, then the source-root fallback `components/ui/`. Inspect nearby imports to confirm the convention before writing. See `./references/project-paths.md` for the resolver contract.
 
 Treat these as valid locations for globally reusable frontend components, resolving them under the project's source root when applicable:
 
@@ -57,10 +56,11 @@ Treat these as valid locations for globally reusable frontend components, resolv
 - `shared/components/` or `src/shared/components/` for components reused across features.
 - `shared/components/ui/` or `src/shared/components/ui/` for reusable coss primitives and project-level UI wrappers.
 - `shared/components/layout/` or `src/shared/components/layout/` for reusable app shell and layout components.
+- Existing `common/`, `core/`, `lib/`, or `design-system/` component directories when those are the project's established shared layer.
 
-Do not place a globally reusable component inside a feature or route directory unless it is intentionally feature-specific. Use `components/ui/` only when the existing project or `components.json` already uses that shadcn-style location. Keep generated imports aligned with the selected directory and the project's configured alias.
+Do not place a globally reusable component inside a feature or route directory unless it is intentionally feature-specific. Keep generated imports aligned with the selected directory and the project's configured alias. Never treat `@`, `~`, or another import prefix as a filesystem directory.
 
-For the Greenfield `react-vite-feature-based` combination, that framework scaffold runs first and creates `src/shared/`; the coss bootstrap therefore selects `src/shared/components/ui/` automatically. Set `COSS_COMPONENTS` to a space- or comma-separated component list when only selected shared primitives are needed.
+Primitive references use `{{ui}}/<component>` as a documentation placeholder. Resolve `{{ui}}` to the selected project alias, such as `@/shared/components/ui`, `~/ui`, or `@design-system/primitives`, before writing code. Never emit `{{ui}}` into a project. Set `COSS_COMPONENTS` to a space- or comma-separated component list when only selected shared primitives are needed.
 
 ## Source of truth
 
@@ -102,6 +102,7 @@ Rule references (read on demand when the task touches these areas):
 - `./references/rules/forms.md` - Field composition, validation, input patterns
 - `./references/rules/composition.md` - Trigger/popup hierarchies, grouped controls
 - `./references/rules/migration.md` - shadcn/Radix to coss/Base UI migration patterns
+- `./references/project-paths.md` - project source root, shared UI directory, and import alias resolution
 - `./references/portal-props.md` - optional `portalProps` on composed popups and toast providers (`keepMounted`, `container`, which surfaces support it)
 
 ## Component discovery
@@ -113,11 +114,12 @@ All 54 primitives have dedicated reference guides at `./references/primitives/<n
 ## Usage workflow
 
 1. Identify user intent (single primitive, composed flow, form flow, overlay flow, feedback flow).
-2. Consult `references/component-registry.md` to identify candidate primitives.
-3. Select primitives from coss docs first; compose project-local components for primitive coverage gaps.
-4. Check at least one particle example for practical composition patterns. Particle files live at `apps/ui/registry/default/particles/p-<name>-N.tsx`.
-5. Write minimal code using documented imports/props.
-6. Self-check accessibility and composition invariants.
+2. Resolve the project's shared UI directory and import alias using `references/project-paths.md`.
+3. Consult `references/component-registry.md` to identify candidate primitives.
+4. Select primitives from coss docs first; compose project-local components for primitive coverage gaps.
+5. Check at least one particle example for practical composition patterns. Particle files live at `apps/ui/registry/default/particles/p-<name>-N.tsx`.
+6. Write minimal code using documented props and resolved project imports.
+7. Self-check accessibility and composition invariants.
 
 ## Installation reference
 
@@ -129,7 +131,7 @@ Quick CLI pattern:
 npx shadcn@latest add @coss/<component>
 ```
 
-For automated or Greenfield bootstrap, use the metadata launcher above instead of `shadcn init`. It preconfigures the shared UI aliases and calls the non-interactive `add` command. The official `init` command is appropriate only for a developer deliberately setting up a new project in an interactive terminal:
+For automated bootstrap in an existing React frontend, use the metadata launcher above instead of `shadcn init`. It detects the source root, shared UI location, aliases, package manager, and Vite-specific setup when applicable, then calls the non-interactive `add` command. The official `init` command is appropriate only for a developer deliberately setting up a new project in an interactive terminal:
 
 ```bash
 pnpm dlx shadcn@latest init @coss/style
