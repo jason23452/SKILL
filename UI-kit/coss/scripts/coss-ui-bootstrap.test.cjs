@@ -67,7 +67,7 @@ withFixture("shared-components", (root) => {
       paths: { "@/*": ["./src/*"] },
     },
   })
-  fs.mkdirSync(path.join(root, "src", "shared"), { recursive: true })
+  fs.mkdirSync(path.join(root, "src", "shared", "components"), { recursive: true })
 }, (root, config) => {
   assert.strictEqual(config.aliases.ui, "@/shared/components/ui")
   assert.strictEqual(bootstrap.aliasToPath("@/"), "src")

@@ -10,7 +10,7 @@ metadata:
 
 ## OpenCode Greenfield Bootstrap Metadata
 
-This OpenCode-only metadata installs coss UI registry artifacts in an existing React frontend. It has no dependency on a separate framework or project-layout skill. The rest of this file remains the official coss skill guidance and references.
+This OpenCode-only metadata installs coss UI registry artifacts in an existing React frontend. It has no dependency on a separate framework or project-layout skill. Its Greenfield order runs after the frontend framework scaffold so established directories such as `src/shared/components` exist before placement is resolved. The rest of this file remains the official coss skill guidance and references.
 
 Bootstrap is deliberately non-interactive: never run `shadcn init @coss/style` from Greenfield automation. The bundled script prepares Tailwind, aliases, and a CLI-valid `components.json`, then uses only official `shadcn add ... --yes --overwrite` registry commands. Before it installs components, it preserves an existing `components.json` UI location or detects the frontend's shared-component directory. `@` remains an import alias, never a standalone filesystem directory. It succeeds only when the official registry, generated primitive files, their local imports, and runtime dependencies are all present. The generated `coss-ui.json` records the installed component set so `--verify` can rerun that check without changing the project.
 
@@ -22,7 +22,7 @@ Registry specs such as `@coss/ui`, `@coss/colors-neutral`, `@coss/style`, `coss/
   "category": "ui-kit",
   "uiKit": "coss",
   "frameworks": ["react", "react-spa", "react-vite", "next", "nextjs", "remix"],
-  "order": 0,
+  "order": 15,
   "packageManager": "node",
   "scaffoldCommand": [
     "if test -f .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs; then node .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs; else node ${OPENCODE_PROJECT_SKILLS_PRESEEDED_DIR:-/app/.opencode/skills}/coss/scripts/coss-ui-bootstrap.cjs; fi"
