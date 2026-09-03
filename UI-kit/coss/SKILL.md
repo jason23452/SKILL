@@ -12,7 +12,7 @@ metadata:
 
 This OpenCode-only metadata installs coss UI registry artifacts during Greenfield bootstrap. The coss agent skills come from the global/preseeded skills manager during bootstrap. The rest of this file remains the official coss skill guidance and references.
 
-Bootstrap is deliberately non-interactive: never run `shadcn init @coss/style` from Greenfield automation. The bundled script prepares Tailwind, aliases, and `components.json` itself, then uses only `shadcn add ... --yes --overwrite`. In the feature-based React/Vite scaffold this writes reusable primitives to `src/shared/components/ui/`. The script reports the CLI exit code and verifies generated artifacts plus runtime dependencies such as `class-variance-authority`, `clsx`, and `tailwind-merge`.
+Bootstrap is deliberately non-interactive: never run `shadcn init @coss/style` from Greenfield automation. The bundled script prepares Tailwind, aliases, and a CLI-valid `components.json`, then uses only official `shadcn add ... --yes --overwrite` registry commands. In the feature-based React/Vite scaffold this writes reusable primitives to `src/shared/components/ui/`. It succeeds only when the official registry, generated primitive files, their local imports, and runtime dependencies are all present. The generated `coss-ui.json` records the installed component set so `--verify` can rerun that check without changing the project.
 
 Registry specs such as `@coss/ui`, `@coss/colors-neutral`, `@coss/style`, `coss/ui`, and `coss/colors-neutral` are remote shadcn registry identifiers. Use the shadcn CLI and diagnose the actual CLI process, `package.json`, lockfile, and generated UI files.
 
@@ -28,7 +28,9 @@ Registry specs such as `@coss/ui`, `@coss/colors-neutral`, `@coss/style`, `coss/
   "scaffoldCommand": [
     "if test -f .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs; then node .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs; else node ${OPENCODE_PROJECT_SKILLS_PRESEEDED_DIR:-/app/.opencode/skills}/coss/scripts/coss-ui-bootstrap.cjs; fi"
   ],
-  "verificationCommands": []
+  "verificationCommands": [
+    "if test -f .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs; then node .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs --verify; else node ${OPENCODE_PROJECT_SKILLS_PRESEEDED_DIR:-/app/.opencode/skills}/coss/scripts/coss-ui-bootstrap.cjs --verify; fi"
+  ]
 }
 ```
 

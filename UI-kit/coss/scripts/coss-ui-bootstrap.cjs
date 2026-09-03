@@ -22,6 +22,8 @@ const REQUIRED_DEV_DEPENDENCIES = [
   "tailwindcss",
 ]
 
+const COSS_INSTALL_MANIFEST = "coss-ui.json"
+
 const DEFAULT_UI_COMPONENTS = [
   "accordion",
   "alert",
@@ -182,6 +184,7 @@ function installDependencies(names, dev) {
   const result = cp.spawnSync(command, args, {
     stdio: "inherit",
     env: packageManagerEnv(packageManager),
+    // Windows package manager launchers are .cmd files and require a shell.
     shell: process.platform === "win32",
   })
 
@@ -315,6 +318,7 @@ function ensureComponentsConfig() {
     components: pathToAlias(path.dirname(ui)),
     ui: pathToAlias(ui),
     utils: pathToAlias(withoutTs(utils)),
+    lib: pathToAlias(path.dirname(utils)),
     hooks: pathToAlias(hooks),
   }
   config.registries = {
@@ -367,6 +371,7 @@ function repairMisplacedAliasArtifacts() {
   const repairs = [
     [aliases.ui || `${at}/components/ui`, aliasToPath(aliases.ui || "src/components/ui")],
     [aliases.utils || `${at}/lib/utils`, aliasToPath(aliases.utils || "src/lib/utils")],
+    [aliases.lib || `${at}/lib`, aliasToPath(aliases.lib || "src/lib")],
     [aliases.hooks || `${at}/hooks`, aliasToPath(aliases.hooks || "src/hooks")],
   ]
   for (const [alias, target] of repairs) {
@@ -400,6 +405,14 @@ function requestedComponents() {
     .filter(Boolean)
 }
 
+function verificationComponents() {
+  if (Object.prototype.hasOwnProperty.call(process.env, "COSS_COMPONENTS")) return requestedComponents()
+
+  const manifest = readJson(COSS_INSTALL_MANIFEST, {})
+  const components = Array.isArray(manifest.components) ? manifest.components : []
+  return components.map(cleanComponent).filter(Boolean)
+}
+
 function installSpecs(requested) {
   const mode = String(process.env.COSS_BOOTSTRAP_MODE || "fast").toLowerCase()
   if (mode === "full-style" || mode === "style" || mode === "full") return [at + "coss/style"]
@@ -413,26 +426,113 @@ function expectedUiComponents(requested) {
   return names
 }
 
+function sourceFile(file) {
+  return [file, `${file}.ts`, `${file}.tsx`, `${file}.js`, `${file}.jsx`]
+    .concat(["ts", "tsx", "js", "jsx"].map((extension) => path.join(file, `index.${extension}`)))
+    .find((candidate) => fs.existsSync(candidate))
+}
+
+function componentFile(ui, name) {
+  return sourceFile(path.join(ui, name))
+}
+
 function componentFileExists(ui, name) {
-  return fs.existsSync(path.join(ui, `${name}.tsx`)) || fs.existsSync(path.join(ui, `${name}.ts`))
+  return Boolean(componentFile(ui, name))
 }
 
-function cossArtifactsReady(requested) {
-  return cossArtifactFilesReady(requested) && REQUIRED_RUNTIME_DEPENDENCIES.every(hasDependency)
+function missingProjectImports(ui, components) {
+  const missing = []
+  const importPattern = /(?:from\s*|import\s*)["'](@\/[^"']+)["']/gu
+
+  for (const component of components) {
+    const file = componentFile(ui, component)
+    if (!file) continue
+
+    const source = fs.readFileSync(file, "utf8")
+    for (const match of source.matchAll(importPattern)) {
+      const specifier = match[1]
+      if (!sourceFile(aliasToPath(specifier))) missing.push(`${component}: ${specifier}`)
+    }
+  }
+
+  return [...new Set(missing)]
 }
 
-function cossArtifactFilesReady(requested) {
+function cossArtifactStatus(requested) {
   const config = readJson("components.json", { aliases: {} })
   const ui = aliasToPath((config.aliases || {}).ui || "src/components/ui")
   const utils = aliasToPath((config.aliases || {}).utils || "src/lib/utils")
-  if (!fs.existsSync(ui)) return false
-
   const expected = expectedUiComponents(requested)
-  const registry = (config.registries || {})[at + "coss"] || JSON.stringify(config).includes("coss.com/ui/r/{name}.json")
+  const registry = (config.registries || {})[at + "coss"]
+  const registryUrl = typeof registry === "string" ? registry : registry && registry.url
 
-  return Boolean(registry)
-    && (fs.existsSync(utils) || fs.existsSync(`${utils}.ts`))
-    && expected.every((name) => componentFileExists(ui, name))
+  return {
+    expected,
+    hasOfficialRegistry: registryUrl === "https://coss.com/ui/r/{name}.json",
+    hasUtils: fs.existsSync(utils) || fs.existsSync(`${utils}.ts`),
+    missingComponents: fs.existsSync(ui)
+      ? expected.filter((name) => !componentFileExists(ui, name))
+      : expected,
+    missingDependencies: REQUIRED_RUNTIME_DEPENDENCIES.filter((name) => !hasDependency(name)),
+    missingProjectImports: fs.existsSync(ui) ? missingProjectImports(ui, expected) : [],
+    ui,
+    utils,
+  }
+}
+
+function cossArtifactFilesReady(requested) {
+  const status = cossArtifactStatus(requested)
+  return status.hasOfficialRegistry &&
+    status.hasUtils &&
+    !status.missingComponents.length &&
+    !status.missingProjectImports.length
+}
+
+function cossArtifactsReady(requested) {
+  const status = cossArtifactStatus(requested)
+  return status.hasOfficialRegistry &&
+    status.hasUtils &&
+    !status.missingComponents.length &&
+    !status.missingProjectImports.length &&
+    !status.missingDependencies.length
+}
+
+function cossArtifactsError(requested) {
+  const status = cossArtifactStatus(requested)
+  const problems = []
+
+  if (!status.hasOfficialRegistry) {
+    problems.push('components.json registries["@coss"] must be https://coss.com/ui/r/{name}.json')
+  }
+  if (!status.hasUtils) problems.push(`missing coss utility module at ${status.utils}.ts`)
+  if (status.missingComponents.length) {
+    problems.push(`missing official coss component files in ${status.ui}: ${status.missingComponents.join(", ")}`)
+  }
+  if (status.missingProjectImports.length) {
+    problems.push(`broken generated local imports: ${status.missingProjectImports.join(", ")}`)
+  }
+  if (status.missingDependencies.length) {
+    problems.push(`missing runtime dependencies: ${status.missingDependencies.join(", ")}`)
+  }
+
+  return `coss UI verification failed: ${problems.join("; ")}`
+}
+
+function assertCossArtifactsReady(requested) {
+  if (!cossArtifactsReady(requested)) throw new Error(cossArtifactsError(requested))
+}
+
+function writeCossInstallState(requested) {
+  writeJson(COSS_INSTALL_MANIFEST, {
+    components: requested,
+    mode: String(process.env.COSS_BOOTSTRAP_MODE || "fast").toLowerCase(),
+  })
+}
+
+function verifyCossUi(requested) {
+  assertCossArtifactsReady(requested)
+  const status = cossArtifactStatus(requested)
+  logStatus(`coss official components verified in ${status.ui}: ${status.expected.join(", ")}`)
 }
 
 function writeUiIndex() {
@@ -456,7 +556,7 @@ function installCossUi() {
   const requested = requestedComponents()
   ensureRuntimeDependencies()
   if (cossArtifactFilesReady(requested)) {
-    if (!cossArtifactsReady(requested)) throw new Error("coss ui artifacts exist but required runtime dependencies could not be installed")
+    assertCossArtifactsReady(requested)
     logStatus("coss ui artifacts and runtime dependencies already present; skipping shadcn add")
     return Promise.resolve()
   }
@@ -471,10 +571,10 @@ function installCossUi() {
     const child = cp.spawn(command, args, {
       stdio: ["ignore", "pipe", "pipe"],
       env,
+      // Windows package manager launchers are .cmd files and require a shell.
       shell: process.platform === "win32",
     })
 
-    let lastOutputAt = Date.now()
     let done = false
 
     const finish = (error) => {
@@ -485,10 +585,7 @@ function installCossUi() {
       else resolve()
     }
 
-    const pipe = (stream, output) => stream && stream.on("data", (chunk) => {
-      lastOutputAt = Date.now()
-      output.write(chunk)
-    })
+    const pipe = (stream, output) => stream && stream.on("data", (chunk) => output.write(chunk))
     pipe(child.stdout, process.stdout)
     pipe(child.stderr, process.stderr)
 
@@ -497,30 +594,42 @@ function installCossUi() {
     }, Number(process.env.COSS_SHADCN_HEARTBEAT_MS || 10000))
     if (heartbeat.unref) heartbeat.unref()
 
-    child.on("close", (code) => {
+    child.on("close", (code, signal) => {
       repairMisplacedAliasArtifacts()
-      writeUiIndex()
+      if (code !== 0) {
+        finish(new Error(`coss shadcn exited with code ${code ?? 1}${signal ? ` (${signal})` : ""}`))
+        return
+      }
+
       try {
         ensureRuntimeDependencies()
+        assertCossArtifactsReady(requested)
       } catch (error) {
         finish(error)
         return
       }
-      if (code === 0 || cossArtifactsReady(requested)) finish()
-      else finish(new Error(`coss shadcn exited with code ${code || 1}`))
+      finish()
     })
     child.on("error", finish)
   })
 }
 
 async function main() {
+  if (process.argv.includes("--verify")) {
+    verifyCossUi(verificationComponents())
+    return
+  }
+
+  const requested = requestedComponents()
   ensureProjectAliases()
   ensureTailwindSetup()
   ensureComponentsConfig()
   repairMisplacedAliasArtifacts()
   await installCossUi()
   repairMisplacedAliasArtifacts()
+  verifyCossUi(requested)
   writeUiIndex()
+  writeCossInstallState(requested)
 }
 
 main().catch((error) => {

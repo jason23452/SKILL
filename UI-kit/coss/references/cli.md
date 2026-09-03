@@ -26,6 +26,12 @@ COSS_COMPONENTS="button dialog toast" node .opencode/skills/coss/scripts/coss-ui
 
 Omit `COSS_COMPONENTS` to add the full coss primitive set. The bootstrap metadata in `SKILL.md` provides the preseeded-skill fallback path used by OpenCode.
 
+The bootstrap exits unsuccessfully unless the official coss registry, requested generated files, generated local imports, and runtime dependencies exist. It records the verified component set in `coss-ui.json`, so it can be rechecked without changing files:
+
+```bash
+node .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs --verify
+```
+
 ### Manual CLI paths
 
 ```bash
