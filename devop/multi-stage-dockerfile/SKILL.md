@@ -29,6 +29,32 @@ Your goal is to help me create efficient multi-stage Dockerfiles that follow bes
 - Combine related RUN commands with `&&` to reduce layer count
 - Consider using COPY --chown to set permissions in one step
 
+## Node.js and pnpm Dependency Policy
+
+- In a Node/pnpm dependency stage, configure pnpm's minimum release age explicitly before running a frozen install.
+- Default `PNPM_MINIMUM_RELEASE_AGE` to a non-zero value. Use `1440` minutes (24 hours) unless the project has an approved policy with a different value.
+- Keep the package manifests ahead of the install step to preserve Docker layer caching.
+
+```dockerfile
+# After copying package.json and pnpm-lock.yaml into the dependency stage.
+ARG PNPM_MINIMUM_RELEASE_AGE=1440
+
+RUN corepack enable \
+  && pnpm config set minimumReleaseAge "$PNPM_MINIMUM_RELEASE_AGE" \
+  && printf 'PNPM_MINIMUM_RELEASE_AGE=%s\n' "$PNPM_MINIMUM_RELEASE_AGE" \
+  && pnpm install --frozen-lockfile
+```
+
+- The `printf` makes the effective policy visible in Docker build logs. CI must retain that log, or explicitly record the selected build argument, so the exception is auditable.
+- Only an approved development or emergency workflow may temporarily set the value to `0`:
+
+```sh
+docker build --build-arg PNPM_MINIMUM_RELEASE_AGE=0 .
+```
+
+- Do not unconditionally disable the waiting period for production deliveries.
+- If the build fails with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, first identify it as pnpm's supply-chain release-age policy. Do not treat it as a corrupted lockfile or bypass it by changing the lockfile; use an approved exception or wait for the required age instead.
+
 ## Security Practices
 
 - Avoid running containers as root - use `USER` instruction to specify a non-root user
