@@ -26,8 +26,8 @@ import {
   FieldError,
   FieldLabel,
   FieldValidity,
-} from "{{ui}}/field"
-import { Input } from "{{ui}}/input"
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 ```
 
 ## Minimal pattern

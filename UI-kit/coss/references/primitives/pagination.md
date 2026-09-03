@@ -28,7 +28,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "{{ui}}/pagination"
+} from "@/components/ui/pagination"
 ```
 
 ## Minimal pattern

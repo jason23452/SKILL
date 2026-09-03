@@ -26,9 +26,9 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
-} from "{{ui}}/field"
-import { Form } from "{{ui}}/form"
-import { Input } from "{{ui}}/input"
+} from "@/components/ui/field"
+import { Form } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 ```
 
 ## Minimal pattern
@@ -76,3 +76,4 @@ import { Input } from "{{ui}}/input"
 ## Further reading
 
 - Base UI Forms handbook: `https://base-ui.com/react/handbook/forms.md`
+

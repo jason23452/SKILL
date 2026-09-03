@@ -29,7 +29,7 @@ import {
   Progress,
   ProgressLabel,
   ProgressValue,
-} from "{{ui}}/progress"
+} from "@/components/ui/progress"
 ```
 
 ## Minimal pattern

@@ -20,14 +20,14 @@ npm install @base-ui/react
 ## Canonical imports
 
 ```tsx
-import { Button } from "{{ui}}/button"
-import { ToggleGroup, ToggleGroupItem } from "{{ui}}/toggle-group"
+import { Button } from "@/components/ui/button"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   Toolbar,
   ToolbarButton,
   ToolbarGroup,
   ToolbarSeparator,
-} from "{{ui}}/toolbar"
+} from "@/components/ui/toolbar"
 ```
 
 ## Minimal pattern
@@ -70,3 +70,4 @@ import {
 
 - core toolbar patterns: `p-toolbar-1`
 - related composition references: `p-toggle-group-1`, `p-group-1`, `p-select-1`
+

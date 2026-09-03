@@ -45,7 +45,7 @@ import {
   ContextMenuSubPopup,
   ContextMenuSubTrigger,
   ContextMenuTrigger,
-} from "{{ui}}/context-menu"
+} from "@/components/ui/context-menu"
 ```
 
 ## Minimal pattern

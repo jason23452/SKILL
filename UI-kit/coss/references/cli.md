@@ -9,49 +9,26 @@ Use this guide when installing, previewing, or discovering coss components via t
   - `pnpm dlx shadcn@latest ...`
   - `bunx --bun shadcn@latest ...`
 - Do not invent flags. Use only documented CLI flags.
-- Never run `shadcn init @coss/style` in a non-interactive bootstrap. It can prompt for project choices. Use the bundled `coss-ui-bootstrap.cjs` script instead; it seeds `components.json` and uses `add --yes --overwrite`.
-- Let the shadcn CLI finish normally. The official coss docs state that the CLI creates files and installs dependencies; do not kill it as soon as component files appear, because dependency installation may still be running.
-- In React projects, coss owns the Tailwind prerequisite and ensures the CSS entry imports `tailwindcss`. Install and configure `@tailwindcss/vite` plus `vite-tsconfig-paths` only when a Vite config exists; preserve another framework's existing Tailwind and alias integration.
-- Verify runtime dependencies before declaring success. coss components commonly need `@base-ui/react`, `lucide-react`, `class-variance-authority`, `clsx`, and `tailwind-merge`.
 
 ## Core Commands for coss Usage
 
-### Automated bootstrap path
-
-For unattended runs in an existing React frontend, invoke the bundled bootstrap script from the target frontend root. It configures Tailwind, aliases, and the coss registry before it calls only non-interactive `add` commands. It preserves an existing `components.json` UI alias; otherwise it detects path aliases and established reusable-component directories before choosing a fallback. Import aliases such as `@` and `~` must not become project-root directories. This skill does not require a separate layout/scaffold skill.
-
-```bash
-COSS_COMPONENTS="button dialog toast" node .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs
-```
-
-Omit `COSS_COMPONENTS` to add the full coss primitive set. The bootstrap metadata in `SKILL.md` provides the preseeded-skill fallback path used by OpenCode.
-
-The bootstrap exits unsuccessfully unless the official coss registry, requested generated files, generated local imports, and runtime dependencies exist. It records the verified component set in `coss-ui.json`, so it can be rechecked without changing files:
-
-```bash
-node .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs --verify
-```
-
-### Manual CLI paths
+### Recommended bootstrap paths
 
 ```bash
 # New projects (recommended — includes Inter + Geist Mono fonts + full theme)
-# Do not use this command in a bootstrap; it requires an interactive terminal.
 npx shadcn@latest init @coss/style
 
 # Existing projects - all primitives
-npx shadcn@latest add @coss/ui --yes --overwrite
+npx shadcn@latest add @coss/ui
 
 # Existing projects - full theme setup
-npx shadcn@latest add @coss/style --yes --overwrite
+npx shadcn@latest add @coss/style
 
 # Existing projects - primitives + color tokens
-npx shadcn@latest add @coss/ui @coss/colors-neutral --yes --overwrite
+npx shadcn@latest add @coss/ui @coss/colors-neutral
 ```
 
 `@coss/style` automatically installs `@coss/fonts` (Inter for `--font-sans` and `--font-heading`, Geist Mono for `--font-mono`), which configures all three font variables in `layout.tsx`. No manual font wiring needed.
-
-According to `https://coss.com/ui/docs/get-started`, the CLI installs dependencies for imported components. Manual fallback dependency installation is a recovery step for failed automation, not the primary install path.
 
 ### `add` (primary)
 

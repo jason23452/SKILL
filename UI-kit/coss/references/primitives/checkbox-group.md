@@ -20,8 +20,8 @@ npm install @base-ui/react
 ## Canonical imports
 
 ```tsx
-import { Checkbox } from "{{ui}}/checkbox"
-import { CheckboxGroup } from "{{ui}}/checkbox-group"
+import { Checkbox } from "@/components/ui/checkbox"
+import { CheckboxGroup } from "@/components/ui/checkbox-group"
 ```
 
 ## Minimal pattern
