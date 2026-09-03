@@ -12,7 +12,7 @@ metadata:
 
 This OpenCode-only metadata installs coss UI registry artifacts during Greenfield bootstrap. The coss agent skills come from the global/preseeded skills manager during bootstrap. The rest of this file remains the official coss skill guidance and references.
 
-Bootstrap follows the official coss install path: run the shadcn CLI with the project's existing package manager and let it finish because the CLI creates files and installs dependencies. The bootstrap script reports the CLI exit code and then verifies generated artifacts plus runtime dependencies such as `class-variance-authority`, `clsx`, and `tailwind-merge`.
+Bootstrap is deliberately non-interactive: never run `shadcn init @coss/style` from Greenfield automation. The bundled script prepares Tailwind, aliases, and `components.json` itself, then uses only `shadcn add ... --yes --overwrite`. In the feature-based React/Vite scaffold this writes reusable primitives to `src/shared/components/ui/`. The script reports the CLI exit code and verifies generated artifacts plus runtime dependencies such as `class-variance-authority`, `clsx`, and `tailwind-merge`.
 
 Registry specs such as `@coss/ui`, `@coss/colors-neutral`, `@coss/style`, `coss/ui`, and `coss/colors-neutral` are remote shadcn registry identifiers. Use the shadcn CLI and diagnose the actual CLI process, `package.json`, lockfile, and generated UI files.
 
@@ -57,6 +57,8 @@ Treat these as valid locations for globally reusable frontend components, resolv
 - `shared/components/layout/` or `src/shared/components/layout/` for reusable app shell and layout components.
 
 Do not place a globally reusable component inside a feature or route directory unless it is intentionally feature-specific. Use `components/ui/` only when the existing project or `components.json` already uses that shadcn-style location. Keep generated imports aligned with the selected directory and the project's configured alias.
+
+For the Greenfield `react-vite-feature-based` combination, that framework scaffold runs first and creates `src/shared/`; the coss bootstrap therefore selects `src/shared/components/ui/` automatically. Set `COSS_COMPONENTS` to a space- or comma-separated component list when only selected shared primitives are needed.
 
 ## Source of truth
 
@@ -125,12 +127,17 @@ Quick CLI pattern:
 npx shadcn@latest add @coss/<component>
 ```
 
-For Greenfield bootstrap, prefer the official commands from `https://coss.com/ui/docs/get-started`. Examples below use pnpm; adapt to the project's existing package manager when running manually:
+For automated or Greenfield bootstrap, use the metadata launcher above instead of `shadcn init`. It preconfigures the shared UI aliases and calls the non-interactive `add` command. The official `init` command is appropriate only for a developer deliberately setting up a new project in an interactive terminal:
 
 ```bash
 pnpm dlx shadcn@latest init @coss/style
-pnpm dlx shadcn@latest add @coss/ui
-pnpm dlx shadcn@latest add @coss/ui @coss/colors-neutral
+```
+
+For an existing project configured with `components.json`, the equivalent non-interactive CLI pattern is:
+
+```bash
+pnpm dlx shadcn@latest add @coss/ui --yes --overwrite
+pnpm dlx shadcn@latest add @coss/ui @coss/colors-neutral --yes --overwrite
 ```
 
 Quick manual pattern:

@@ -9,26 +9,38 @@ Use this guide when installing, previewing, or discovering coss components via t
   - `pnpm dlx shadcn@latest ...`
   - `bunx --bun shadcn@latest ...`
 - Do not invent flags. Use only documented CLI flags.
+- Never run `shadcn init @coss/style` in a non-interactive bootstrap. It can prompt for project choices. Use the bundled `coss-ui-bootstrap.cjs` script instead; it seeds `components.json` and uses `add --yes --overwrite`.
 - Let the shadcn CLI finish normally. The official coss docs state that the CLI creates files and installs dependencies; do not kill it as soon as component files appear, because dependency installation may still be running.
 - In React/Vite projects, coss owns the Tailwind prerequisite: install `tailwindcss` and `@tailwindcss/vite`, add the Vite plugin, and ensure the CSS entry imports `tailwindcss`.
 - Verify runtime dependencies before declaring success. coss components commonly need `@base-ui/react`, `lucide-react`, `class-variance-authority`, `clsx`, and `tailwind-merge`.
 
 ## Core Commands for coss Usage
 
-### Recommended bootstrap paths
+### Automated bootstrap path
+
+For Greenfield and other unattended runs, invoke the bundled bootstrap script from the target frontend root. It configures Tailwind, aliases, and the coss registry before it calls only non-interactive `add` commands. When `src/shared/` exists, generated primitives are placed in `src/shared/components/ui/`.
+
+```bash
+COSS_COMPONENTS="button dialog toast" node .opencode/skills/coss/scripts/coss-ui-bootstrap.cjs
+```
+
+Omit `COSS_COMPONENTS` to add the full coss primitive set. The bootstrap metadata in `SKILL.md` provides the preseeded-skill fallback path used by OpenCode.
+
+### Manual CLI paths
 
 ```bash
 # New projects (recommended — includes Inter + Geist Mono fonts + full theme)
+# Do not use this command in a bootstrap; it requires an interactive terminal.
 npx shadcn@latest init @coss/style
 
 # Existing projects - all primitives
-npx shadcn@latest add @coss/ui
+npx shadcn@latest add @coss/ui --yes --overwrite
 
 # Existing projects - full theme setup
-npx shadcn@latest add @coss/style
+npx shadcn@latest add @coss/style --yes --overwrite
 
 # Existing projects - primitives + color tokens
-npx shadcn@latest add @coss/ui @coss/colors-neutral
+npx shadcn@latest add @coss/ui @coss/colors-neutral --yes --overwrite
 ```
 
 `@coss/style` automatically installs `@coss/fonts` (Inter for `--font-sans` and `--font-heading`, Geist Mono for `--font-mono`), which configures all three font variables in `layout.tsx`. No manual font wiring needed.
