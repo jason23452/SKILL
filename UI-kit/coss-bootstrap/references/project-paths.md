@@ -15,19 +15,28 @@ configured aliases through matching `resolve.alias` entries, Vite 8+
 
 ## Resolution order
 
-1. Use a valid `components.json` `aliases.ui` value.
-2. Use a valid `components.json` `aliases.components` value with `/ui`.
+1. Use a valid, existing `components.json` `aliases.ui` value.
+2. Use a valid, existing `components.json` `aliases.components` value with
+   `/ui`, except when it already points at a direct shared component directory.
 3. Resolve configured TypeScript or JavaScript aliases.
    - `ui` and `primitives` aliases are used directly.
    - `components` and `design-system` aliases receive `/ui`.
-4. Search existing reusable UI directories under the detected source root:
+4. Use an existing shared component directory directly when present:
+   - `shared/components`, `common/components`, `core/components`
+   - `lib/components`, `design-system/components`
+5. Search existing reusable UI directories under the detected source root:
    - `shared/components/ui`, `common/components/ui`, `core/components/ui`
    - `lib/components/ui`, `design-system/components/ui`
    - `design-system/primitives`, `design-system/ui`, `components/ui`
    - `shared/primitives`, `common/primitives`, `core/primitives`
    - `lib/primitives`, `components/primitives`, `primitives`, `ui`
-5. Search reusable component roots and append `/ui`.
-6. If no convention exists, use `<source-root>/components/ui`.
+6. Search reusable component roots and append `/ui`.
+7. If no convention exists, use `<source-root>/components/ui`.
+
+If an established shared component directory exists, it wins over the generic
+`<source-root>/components` and `<source-root>/components/ui` defaults in
+`components.json`. Existing files are left in place; the bootstrap does not
+move them automatically.
 
 The source root comes from an existing `@/*`, `~/*`, or `#/*` alias when
 possible, then from `src`, `app`, or `client/src`.

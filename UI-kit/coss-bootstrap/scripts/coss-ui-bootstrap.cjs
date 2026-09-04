@@ -878,6 +878,17 @@ function commonRootForUi(ui) {
   return parent || detectSourceRoot()
 }
 
+function isDirectSharedComponentDirectory(dir) {
+  const normalized = projectPath(dir).toLowerCase()
+  return [
+    "shared/components",
+    "common/components",
+    "core/components",
+    "lib/components",
+    "design-system/components",
+  ].some((suffix) => normalized === suffix || normalized.endsWith(`/${suffix}`))
+}
+
 function componentSourceRoots() {
   const sourceRoot = detectSourceRoot()
   const roots = [sourceRoot]
@@ -892,6 +903,8 @@ function detectAliasedUiDirectory() {
     const aliasName = mapping.aliasPrefix.replace(/\/$/u, "").split("/").pop().replace(/^[@~#]/u, "").toLowerCase()
     if (["ui", "primitives"].includes(aliasName) && isReusableProjectPath(mapping.targetPrefix)) return mapping.targetPrefix
     if (["component", "components", "design-system", "designsystem"].includes(aliasName)) {
+      if (isDirectSharedComponentDirectory(mapping.targetPrefix) &&
+        isReusableProjectPath(mapping.targetPrefix) && isDirectory(mapping.targetPrefix)) return mapping.targetPrefix
       const candidate = joinProjectPath(mapping.targetPrefix, "ui")
       if (isReusableProjectPath(candidate)) return candidate
     }
@@ -940,6 +953,15 @@ function detectExistingUiDirectory() {
   const commonRoots = ["shared", "common", "core", "design-system", "app"]
 
   for (const sourceRoot of componentSourceRoots()) {
+    for (const directory of componentDirectories) {
+      const candidate = joinProjectPath(sourceRoot, directory)
+      if (isDirectSharedComponentDirectory(candidate) &&
+        isReusableProjectPath(candidate) && hasRuntimeAliasForPath(candidate) &&
+        isDirectory(candidate) && !isDirectory(joinProjectPath(candidate, "ui"))) return candidate
+    }
+  }
+
+  for (const sourceRoot of componentSourceRoots()) {
     for (const directory of uiDirectories) {
       const candidate = joinProjectPath(sourceRoot, directory)
       if (isReusableProjectPath(candidate) && hasRuntimeAliasForPath(candidate) && isDirectory(candidate)) return candidate
@@ -963,14 +985,31 @@ function detectExistingUiDirectory() {
 }
 
 function detectComponentLayout(config) {
+  const sourceRoot = detectSourceRoot()
   const configuredUiCandidate = configuredAliasPath(config, "ui")
   const configuredComponentsCandidate = configuredAliasPath(config, "components")
-  const configuredUi = isReusableProjectPath(configuredUiCandidate) ? configuredUiCandidate : ""
-  const configuredComponents = isReusableProjectPath(configuredComponentsCandidate) ? configuredComponentsCandidate : ""
+  const existingUi = detectExistingUiDirectory()
+  const configuredComponentsUi = isDirectSharedComponentDirectory(configuredComponentsCandidate)
+    ? configuredComponentsCandidate
+    : joinProjectPath(configuredComponentsCandidate, "ui")
+  const genericUi = joinProjectPath(sourceRoot, "components", "ui")
+  const genericComponents = joinProjectPath(sourceRoot, "components")
+  const sharedDirectoryWins = Boolean(existingUi &&
+    (isDirectSharedComponentDirectory(existingUi) || isDirectSharedComponentDirectory(path.dirname(existingUi))))
+  const configuredUi = isReusableProjectPath(configuredUiCandidate) &&
+    (isDirectory(configuredUiCandidate) || !existingUi) &&
+    !(sharedDirectoryWins && projectPathKey(configuredUiCandidate) === projectPathKey(genericUi)) ? configuredUiCandidate : ""
+  const configuredComponents = isReusableProjectPath(configuredComponentsCandidate) &&
+    (isDirectory(configuredComponentsUi) || !existingUi) &&
+    !(sharedDirectoryWins && projectPathKey(configuredComponentsCandidate) === projectPathKey(genericComponents))
+    ? configuredComponentsCandidate
+    : ""
   const ui = configuredUi ||
-    (configuredComponents ? joinProjectPath(configuredComponents, "ui") : "") ||
+    (configuredComponents ? (isDirectSharedComponentDirectory(configuredComponents)
+      ? configuredComponents
+      : joinProjectPath(configuredComponents, "ui")) : "") ||
     detectAliasedUiDirectory() ||
-    detectExistingUiDirectory() ||
+    existingUi ||
     joinProjectPath(detectSourceRoot(), "components", "ui")
   if (!isReusableProjectPath(ui)) {
     throw new Error(`coss bootstrap could not resolve a project-local shared UI directory: ${ui || "(empty)"}`)
@@ -979,16 +1018,17 @@ function detectComponentLayout(config) {
     throw new Error(`coss bootstrap requires an import alias for the shared UI directory: ${ui}`)
   }
   const commonRoot = commonRootForUi(ui)
-  const sourceRoot = detectSourceRoot()
   const reusableRoot = pathHasAlias(commonRoot) ? commonRoot : (pathHasAlias(ui) ? ui : commonRoot)
   const localSharedRoot = reusableRoot === sourceRoot ? "" : reusableRoot
   const componentsRoot = projectPath(path.dirname(ui))
 
   return {
     ui,
-    components: configuredComponents || (pathHasAlias(componentsRoot) ? componentsRoot : ui),
+    components: configuredComponents || (path.basename(ui) === "components"
+      ? ui
+      : (pathHasAlias(componentsRoot) ? componentsRoot : ui)),
     utils: configuredAliasPath(config, "utils") ||
-      (localSharedRoot ? joinProjectPath(localSharedRoot, "utils", "cn") : joinProjectPath(sourceRoot, "lib", "utils")),
+      joinProjectPath(localSharedRoot || sourceRoot, "lib", "utils"),
     hooks: configuredAliasPath(config, "hooks") ||
       (localSharedRoot ? joinProjectPath(localSharedRoot, "hooks") : joinProjectPath(sourceRoot, "hooks")),
   }
@@ -1025,8 +1065,10 @@ function ensureComponentsConfig(options = {}) {
   const existingUtils = configuredAlias(existingAliases, "utils")
   const existingLib = configuredAlias(existingAliases, "lib")
   const existingHooks = configuredAlias(existingAliases, "hooks")
-  const reusableComponents = isReusableProjectPath(aliasToPath(existingComponents)) ? existingComponents : ""
-  const reusableUi = isReusableProjectPath(aliasToPath(existingUi)) ? existingUi : ""
+  const reusableComponents = isReusableProjectPath(aliasToPath(existingComponents)) &&
+    projectPathKey(aliasToPath(existingComponents)) === projectPathKey(layout.components) ? existingComponents : ""
+  const reusableUi = isReusableProjectPath(aliasToPath(existingUi)) &&
+    projectPathKey(aliasToPath(existingUi)) === projectPathKey(layout.ui) ? existingUi : ""
 
   config.$schema = config.$schema || "https://ui.shadcn.com/schema.json"
   config.aliases = {

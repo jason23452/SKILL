@@ -55,12 +55,16 @@ Run the script from the frontend project root, never from this skill catalog.
 
 The script applies this precedence:
 
-1. Existing valid `components.json` `aliases.ui`.
-2. Existing valid `components.json` `aliases.components` plus `/ui`.
+1. An existing usable `components.json` `aliases.ui` target.
+2. An existing usable `components.json` `aliases.components` target, with
+   `/ui` appended except for a direct shared component directory.
 3. A configured TypeScript/JavaScript UI, primitive, component, or design-system alias.
-4. An established reusable directory such as `shared/components/ui`,
-   `design-system/primitives`, or `components/ui`.
+4. An established reusable directory such as `shared/components`,
+   `shared/components/ui`, `design-system/primitives`, or `components/ui`.
 5. `<source-root>/components/ui` as the final fallback.
+
+An existing `shared/components` directory is used directly, so COSS files go
+to `src/shared/components` rather than a newly created `src/components/ui`.
 
 Read `references/project-paths.md` for the complete resolver contract. The
 script stores its full resolved registry set in `coss-ui.json`; rerun it with

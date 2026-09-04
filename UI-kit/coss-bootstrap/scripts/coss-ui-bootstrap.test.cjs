@@ -114,11 +114,49 @@ withFixture("shared-components", (root) => {
   })
   fs.mkdirSync(path.join(root, "src", "shared", "components"), { recursive: true })
 }, (root, config) => {
-  assert.strictEqual(config.aliases.ui, "@/shared/components/ui")
+  assert.strictEqual(config.aliases.ui, "@/shared/components")
+  assert.strictEqual(config.aliases.components, "@/shared/components")
   assert.strictEqual(bootstrap.aliasToPath("@/"), "src")
-  assert.ok(fs.existsSync(path.join(root, "src", "shared", "components", "ui")))
-  assert.ok(fs.existsSync(path.join(root, "src", "shared", "utils", "cn.ts")))
+  assert.ok(fs.existsSync(path.join(root, "src", "shared", "components")))
+  assert.strictEqual(fs.existsSync(path.join(root, "src", "shared", "components", "ui")), false)
+  assert.ok(fs.existsSync(path.join(root, "src", "shared", "lib", "utils.ts")))
   assert.strictEqual(fs.existsSync(path.join(root, "@")), false)
+})
+
+withFixture("shared-components-over-stale-default-aliases", (root) => {
+  writeJson(root, "tsconfig.json", {
+    compilerOptions: {
+      baseUrl: ".",
+      paths: { "@/*": ["./src/*"] },
+    },
+  })
+  writeJson(root, "components.json", {
+    aliases: {
+      components: "@/components",
+      ui: "@/components/ui",
+    },
+  })
+  fs.mkdirSync(path.join(root, "src", "shared", "components"), { recursive: true })
+  fs.mkdirSync(path.join(root, "src", "components", "ui"), { recursive: true })
+  fs.writeFileSync(path.join(root, "src", "components", "ui", "legacy.tsx"), "export const Legacy = null\n")
+}, (root, config) => {
+  assert.strictEqual(config.aliases.components, "@/shared/components")
+  assert.strictEqual(config.aliases.ui, "@/shared/components")
+  assert.ok(fs.existsSync(path.join(root, "src", "components", "ui", "legacy.tsx")))
+})
+
+withFixture("nested-shared-ui-directory", (root) => {
+  writeJson(root, "tsconfig.json", {
+    compilerOptions: {
+      baseUrl: ".",
+      paths: { "@/*": ["./src/*"] },
+    },
+  })
+  fs.mkdirSync(path.join(root, "src", "shared", "components", "ui"), { recursive: true })
+}, (root, config) => {
+  assert.strictEqual(config.aliases.ui, "@/shared/components/ui")
+  assert.strictEqual(config.aliases.components, "@/shared/components")
+  assert.ok(fs.existsSync(path.join(root, "src", "shared", "components", "ui")))
 })
 
 withFixture("bare-shared", (root) => {
@@ -132,7 +170,7 @@ withFixture("bare-shared", (root) => {
 }, (root, config) => {
   assert.strictEqual(config.aliases.ui, "@/shared/components/ui")
   assert.ok(fs.existsSync(path.join(root, "src", "shared", "components", "ui")))
-  assert.ok(fs.existsSync(path.join(root, "src", "shared", "utils", "cn.ts")))
+  assert.ok(fs.existsSync(path.join(root, "src", "shared", "lib", "utils.ts")))
 })
 
 withFixture("app-source-root", (root) => {
@@ -144,9 +182,10 @@ withFixture("app-source-root", (root) => {
   })
   fs.mkdirSync(path.join(root, "app", "common", "components"), { recursive: true })
 }, (root, config) => {
-  assert.strictEqual(config.aliases.ui, "@/common/components/ui")
-  assert.ok(fs.existsSync(path.join(root, "app", "common", "components", "ui")))
-  assert.ok(fs.existsSync(path.join(root, "app", "common", "utils", "cn.ts")))
+  assert.strictEqual(config.aliases.ui, "@/common/components")
+  assert.ok(fs.existsSync(path.join(root, "app", "common", "components")))
+  assert.strictEqual(fs.existsSync(path.join(root, "app", "common", "components", "ui")), false)
+  assert.ok(fs.existsSync(path.join(root, "app", "common", "lib", "utils.ts")))
   assert.strictEqual(fs.existsSync(path.join(root, "@")), false)
 })
 
@@ -178,7 +217,7 @@ withFixture("custom-ui-alias", (root) => {
 }, (root, config) => {
   assert.strictEqual(config.aliases.ui, "@ui")
   assert.strictEqual(config.aliases.components, "@ui")
-  assert.strictEqual(config.aliases.utils, "@ui/utils/cn")
+  assert.strictEqual(config.aliases.utils, "@ui/lib/utils")
   assert.strictEqual(config.aliases.hooks, "@ui/hooks")
   assert.strictEqual(bootstrap.aliasToPath("@ui"), "client/design/primitives")
   assert.ok(fs.existsSync(path.join(root, "client", "design", "primitives")))
@@ -859,6 +898,40 @@ async function runAsyncTests() {
     bootstrap.ensureUtilityModule(plan)
     assert.strictEqual(fs.existsSync(utilsFile), false)
     assert.doesNotThrow(() => bootstrap.assertNoArtifactConflicts(plan))
+  })
+
+  await withAsyncFixture("shared-components-registry-plan", (root) => {
+    writeJson(root, "tsconfig.json", {
+      compilerOptions: {
+        baseUrl: ".",
+        paths: { "@/*": ["./src/*"] },
+      },
+    })
+    fs.mkdirSync(path.join(root, "src", "shared", "components"), { recursive: true })
+    return { deferUtility: true }
+  }, async (root, config) => {
+    const registry = {
+      "colors-neutral": { name: "colors-neutral", type: "registry:style" },
+      button: {
+        name: "button",
+        type: "registry:ui",
+        files: [{ path: "registry/default/ui/button.tsx", type: "registry:ui", content: "export const Button = null\n" }],
+      },
+      utils: {
+        name: "utils",
+        type: "registry:lib",
+        files: [{ path: "registry/default/lib/utils.ts", type: "registry:lib", content: "export const cn = null\n" }],
+      },
+    }
+    const plan = await bootstrap.resolveCossInstallPlan(["button"], async (name) => registry[name])
+    assert.strictEqual(config.aliases.ui, "@/shared/components")
+    assert.strictEqual(config.aliases.utils, "@/shared/lib/utils")
+    assert.deepStrictEqual(
+      plan.artifacts.map((artifact) => artifact.target),
+      ["src/shared/components/button.tsx", "src/shared/lib/utils.ts"],
+    )
+    bootstrap.ensureUtilityModule(plan)
+    assert.strictEqual(fs.existsSync(path.join(root, "src", "shared", "lib", "utils.ts")), false)
   })
 
   await withAsyncFixture("registry-errors", (root) => {
