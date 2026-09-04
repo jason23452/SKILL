@@ -8,9 +8,20 @@
       "files": [],
       "assertions": [
         "Output includes a projects feature split into __init__.py, router.py, schemas.py, service.py, repository.py, models.py, and dependencies.py.",
-        "Output registers the projects router in app/features/router.py instead of importing it directly in app/main.py.",
+        "Output registers the projects router in app/features/router.py instead of importing it directly in the root main.py.",
         "Output keeps database access in the repository layer and uses dependency-injected service methods in the router.",
         "Output includes SQLAlchemy async model guidance and Alembic migration handling, including migrations/env.py model import or equivalent metadata visibility."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "建立一個新的 FastAPI 後端專案。入口檔必須在專案根目錄的 main.py，不要額外建立 backend 資料夾。",
+      "expected_output": "A root-level FastAPI project scaffold with main.py and app/ feature modules, without a backend/ wrapper directory.",
+      "files": [],
+      "assertions": [
+        "Output places the FastAPI application entrypoint at main.py in the project root.",
+        "Output does not create or require a backend/ wrapper directory.",
+        "Output starts the application with uv run uvicorn main:app."
       ]
     },
     {

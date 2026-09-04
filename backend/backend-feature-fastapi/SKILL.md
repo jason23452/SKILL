@@ -17,8 +17,8 @@ compatibility: Python 3.12 FastAPI backend using uv, SQLAlchemy 2 async, asyncpg
    "scaffoldCommand": [
      "if test -f .opencode/skills/backend-feature-fastapi/scripts/bootstrap-fastapi.cjs; then node .opencode/skills/backend-feature-fastapi/scripts/bootstrap-fastapi.cjs; else node ${OPENCODE_PROJECT_SKILLS_PRESEEDED_DIR:-/app/.opencode/skills}/backend-feature-fastapi/scripts/bootstrap-fastapi.cjs; fi"
    ],
-  "verificationCommands": ["uv run python -m compileall app"],
-   "runtimeSmokeCommand": "uv run uvicorn app.main:app --host 127.0.0.1 --port $PORT",
+  "verificationCommands": ["uv run python -m compileall main.py app"],
+   "runtimeSmokeCommand": "uv run uvicorn main:app --host 127.0.0.1 --port $PORT",
   "runtimeSmokeHealthUrl": "http://127.0.0.1:$PORT/health"
 }
 ```
@@ -27,16 +27,16 @@ Use this skill to build or modify backend features in the same style as this pro
 
 ## Start Here
 
-1. Identify the backend root. In this project it is `backend/`.
-2. Read `backend/README.md`, `backend/pyproject.toml`, `backend/app/features/router.py`, and the closest existing feature under `backend/app/features/` before editing.
-3. If the task adds a database-backed feature, also read `backend/app/db/session.py`, `backend/app/db/base.py`, `backend/migrations/env.py`, and the latest files in `backend/migrations/versions/`.
+1. Treat the project root (`.`) as the backend root. Do not create a `backend/` wrapper directory.
+2. Read `README.md`, `pyproject.toml`, `main.py`, `app/features/router.py`, and the closest existing feature under `app/features/` before editing.
+3. If the task adds a database-backed feature, also read `app/db/session.py`, `app/db/base.py`, `migrations/env.py`, and the latest files in `migrations/versions/`.
 4. Keep changes local to the relevant feature unless shared infrastructure is truly needed.
 
 Read `references/architecture.md` when you need a compact project map. Read `references/feature-template.md` when creating a new feature from scratch.
 
 ## Architecture Rules
 
-- `app/main.py` owns FastAPI app creation and only mounts the collected feature router. Do not import individual feature routers there.
+- `main.py` at the project root owns FastAPI app creation and only mounts the collected feature router. Do not create `backend/main.py` or import individual feature routers there.
 - `app/features/router.py` collects feature routers. Add new feature routers here.
 - `app/core/config.py` owns environment-backed settings through `pydantic-settings`.
 - `app/db/` owns shared SQLAlchemy base, async engine, and async session dependency.
@@ -46,9 +46,9 @@ Read `references/architecture.md` when you need a compact project map. Read `ref
 
 ## CORS And Runtime
 
-- Configure `CORSMiddleware` in `app/main.py` with `allow_origins=["*"]`, `allow_methods=["*"]`, and `allow_headers=["*"]` by default.
+- Configure `CORSMiddleware` in `main.py` with `allow_origins=["*"]`, `allow_methods=["*"]`, and `allow_headers=["*"]` by default.
 - Keep `allow_credentials=False` when using wildcard origins; browsers reject wildcard origins for credentialed CORS requests.
-- Start the application with `uv run uvicorn app.main:app --host 127.0.0.1 --port $PORT`.
+- Start the application with `uv run uvicorn main:app --host 127.0.0.1 --port $PORT`.
 - Keep `uvicorn[standard]` in `pyproject.toml` so the documented runtime command is available after `uv sync`.
 
 ## Feature Layout
@@ -128,12 +128,12 @@ Use async SQLAlchemy APIs in repositories. Do not introduce sync sessions or syn
 
 ## Verification
 
-Run verification from `backend/` when possible:
+Run verification from the project root:
 
 ```bash
-uv run python -m compileall app
+uv run python -m compileall main.py app
 uv run alembic upgrade head
-uv run dev
+uv run uvicorn main:app --reload
 ```
 
 If the environment does not have Postgres running, report that migration/runtime verification was not executed and still run syntax-level checks when possible.

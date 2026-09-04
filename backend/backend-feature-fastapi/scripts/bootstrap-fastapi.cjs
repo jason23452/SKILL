@@ -26,7 +26,7 @@ def health():
 `,
 )
 write(
-  'app/main.py',
+  'main.py',
   `from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

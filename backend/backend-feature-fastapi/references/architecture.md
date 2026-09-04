@@ -1,6 +1,6 @@
 # Backend Architecture Snapshot
 
-This project uses a feature-based FastAPI backend located at `backend/`.
+This project uses a feature-based FastAPI backend at the project root. Do not create a `backend/` wrapper directory.
 
 ## Stack
 
@@ -14,17 +14,15 @@ This project uses a feature-based FastAPI backend located at `backend/`.
 
 ## Entry Points
 
-- `backend/main.py`: CLI entrypoint for `uv run dev`; runs `uvicorn` against `app.main:app`.
-- `backend/app/main.py`: contains `AppFactory`, creates `FastAPI`, sets title/debug/lifespan, and includes `api_router` with `settings.api_prefix`.
-- `backend/app/main.py`: configures permissive development CORS with `allow_origins=["*"]`, all methods and headers, and `allow_credentials=False`.
-- `backend/app/features/router.py`: imports feature packages and includes each feature router.
+- `main.py`: creates the `FastAPI` app, configures CORS, and includes the collected feature router. Start it with `uv run uvicorn main:app`.
+- `app/features/router.py`: imports feature packages and includes each feature router.
 
 ## Shared Infrastructure
 
-- `backend/app/core/config.py`: `Settings` class, `.env` loading, cached `settings` singleton.
-- `backend/app/db/base.py`: SQLAlchemy declarative `Base`.
-- `backend/app/db/session.py`: async engine, `async_sessionmaker`, and `get_db_session` dependency.
-- `backend/migrations/env.py`: Alembic async migration setup. It must import model modules so `Base.metadata` includes them.
+- `app/core/config.py`: `Settings` class, `.env` loading, cached `settings` singleton.
+- `app/db/base.py`: SQLAlchemy declarative `Base`.
+- `app/db/session.py`: async engine, `async_sessionmaker`, and `get_db_session` dependency.
+- `migrations/env.py`: Alembic async migration setup. It must import model modules so `Base.metadata` includes them.
 
 ## Existing Feature Patterns
 
@@ -55,7 +53,7 @@ Use this pattern for normal CRUD-style features.
 
 ## Conventions To Preserve
 
-- Keep `app/main.py` free of direct feature imports.
+- Keep `main.py` free of direct feature imports.
 - Register new features in `app/features/router.py`.
 - Keep route prefixes feature-local; API versioning comes from `settings.api_prefix`.
 - Keep database access in repositories, not routers or services.
@@ -67,11 +65,11 @@ Use this pattern for normal CRUD-style features.
 
 ## Commands
 
-Run from `backend/`:
+Run from the project root:
 
 ```bash
 uv sync
-uv run uvicorn app.main:app --reload
+uv run uvicorn main:app --reload
 uv run alembic upgrade head
-uv run python -m compileall app
+uv run python -m compileall main.py app
 ```
